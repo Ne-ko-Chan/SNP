@@ -17,13 +17,12 @@ class CacheManager:
     ) -> None:
         self._memory: dict[tuple, MemoryEntry] = {}
         self._func: Callable = func
-        self._max_size = self.sanitize_int_args(max_size)
-        self._seconds = self.sanitize_int_args(seconds)
+        self._max_size: int = self.sanitize_int_args(max_size)
+        self._seconds: int = self.sanitize_int_args(seconds)
         self._lock = Lock()
 
-        if self._seconds == -1:
-            return
-        Thread(target=self.delete_expired, daemon=True).start()
+        if self._seconds != -1:
+            Thread(target=self.delete_expired, daemon=True).start()
 
     def find_or_call(self, args: tuple, kwargs: dict[str, Any]) -> Any:
         key = self.args_to_tuple(args, kwargs)
@@ -67,7 +66,6 @@ class CacheManager:
 
     def delete_expired(self) -> None:
         while True:
-            print("Searching for expired entries")
             sleep(self._seconds / 2)
             to_delete = []
             with self._lock:
@@ -77,7 +75,6 @@ class CacheManager:
 
                 for k in to_delete:
                     del self._memory[k]
-                    print(f"Deleted {k} due to lifetime limit")
 
     @staticmethod
     def sanitize_int_args(arg: Any) -> int:

@@ -1,7 +1,10 @@
 from task_11 import Dessert
 
+
 class JellyBean(Dessert):
-    def __init__(self, name: str = "", calories: int | float = 0, flavor: str = "") -> None:
+    def __init__(
+        self, name: str = "", calories: int | float = 0, flavor: str = ""
+    ) -> None:
         super().__init__(name, calories)
         self.flavor = flavor
 

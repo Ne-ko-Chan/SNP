@@ -1,4 +1,4 @@
-def sort_list(list: list[int|float]) -> list[int|float]:
+def sort_list(list: list[int | float]) -> list[int | float]:
     if len(list) == 0:
         return []
 
@@ -19,7 +19,8 @@ def sort_list(list: list[int|float]) -> list[int|float]:
     list.append(min)
     return list
 
-print(sort_list([]))
-print(sort_list([2, 4, 6, 8]))
-print(sort_list([1]))
-print(sort_list([1, 2, 1, 3]))
+
+# print(sort_list([]))
+# print(sort_list([2, 4, 6, 8]))
+# print(sort_list([1]))
+# print(sort_list([1, 2, 1, 3]))

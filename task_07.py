@@ -22,8 +22,8 @@ def combine_anagrams(words_array: list[str]) -> list[list[str]]:
     return [v for _, v in res_map.items()]
 
 
-print(
-    combine_anagrams(
-        ["cars", "for", "potatoes", "racs", "four", "scar", "creams", "scream"]
-    )
-)
+# print(
+#     combine_anagrams(
+#         ["cars", "for", "potatoes", "racs", "four", "scar", "creams", "scream"]
+#     )
+# )

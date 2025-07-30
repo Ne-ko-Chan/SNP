@@ -1,5 +1,5 @@
 class Dessert:
-    def __init__(self, name: str  = "", calories: int | float = 0) -> None:
+    def __init__(self, name: str = "", calories: int | float = 0) -> None:
         self._name = name
         self._calories = calories
 
@@ -22,7 +22,7 @@ class Dessert:
         self._name = name
 
     @property
-    def calories(self) -> int|float:
+    def calories(self) -> int | float:
         return self._calories
 
     @calories.setter

@@ -13,9 +13,9 @@ def str_mult(string: str) -> None | int:
     return res
 
 
-print(multiply_numbers())
-print(multiply_numbers("ss"))
-print(multiply_numbers("1234"))
-print(multiply_numbers("sssdd34"))
-print(multiply_numbers(2.3))
-print(multiply_numbers([5, 6, 4]))
+# print(multiply_numbers())
+# print(multiply_numbers("ss"))
+# print(multiply_numbers("1234"))
+# print(multiply_numbers("sssdd34"))
+# print(multiply_numbers(2.3))
+# print(multiply_numbers([5, 6, 4]))

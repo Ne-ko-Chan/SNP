@@ -2,7 +2,6 @@ from typing import Any
 
 
 def connect_dicts(dict1: dict[Any, int], dict2: dict[Any, int]) -> dict[Any, int]:
-    # Count sum of values
     sum1: int = 0
     sum2: int = 0
     for _, v in dict1.items():
@@ -26,6 +25,6 @@ def connect_dicts(dict1: dict[Any, int], dict2: dict[Any, int]) -> dict[Any, int
     return dict(sorted(res.items(), reverse=True))
 
 
-print(connect_dicts({"a": 2, "b": 12}, {"c": 11, "e": 5}))
-print(connect_dicts({"a": 13, "b": 9, "d": 11}, {"c": 12, "a": 15}))
-print(connect_dicts({"a": 14, "b": 12}, {"c": 11, "a": 15}))
+# print(connect_dicts({"a": 2, "b": 12}, {"c": 11, "e": 5}))
+# print(connect_dicts({"a": 13, "b": 9, "d": 11}, {"c": 12, "a": 15}))
+# print(connect_dicts({"a": 14, "b": 12}, {"c": 11, "a": 15}))

@@ -12,8 +12,12 @@ class BlockTranspositionCipher:
         if self.i >= len(self.blocks):
             raise StopIteration
 
-        res = self.process_block()
-        if self.is_decrypt and self.i == len(self.blocks)-1:
+        if not self.is_decrypt:
+            res = self.encrypt_block()
+            return res
+
+        res = self.decrypt_block()
+        if self.i == len(self.blocks)-1:
             res = res.rstrip(" ")
         return res
 
@@ -28,7 +32,7 @@ class BlockTranspositionCipher:
 
         self.key = self.form_array_key(key)
 
-    def process_block(self) -> str:
+    def encrypt_block(self) -> str:
         res = [" "]*len(self.key)
         block = self.blocks[self.i]
         for i, letter in enumerate(block):
@@ -36,9 +40,18 @@ class BlockTranspositionCipher:
 
         return "".join(res)
 
+    def decrypt_block(self) -> str:
+        res = [" "]*len(self.key)
+        block = self.blocks[self.i]
+        for i, letter in enumerate(block):
+            res[self.key.index(i)] = letter
 
-    @classmethod
-    def split_text(cls, text: str, n: int) -> list[list[str]]:
+        return "".join(res)
+
+
+
+    @staticmethod
+    def split_text(text: str, n: int) -> list[list[str]]:
         res = []
         if len(text) % n != 0:
             text = text + " " * (n - len(text) % n)
@@ -48,8 +61,8 @@ class BlockTranspositionCipher:
             res[-1].append(v)
         return res
 
-    @classmethod
-    def validate_key(cls, key: str) -> bool:
+    @staticmethod
+    def validate_key(key: str) -> bool:
         tostrip = string.ascii_lowercase
         listkey = list(key)
         for c in tostrip:
@@ -61,6 +74,8 @@ class BlockTranspositionCipher:
             return False
         return True
 
-    @classmethod
-    def form_array_key(cls, strkey: str) -> list[int]:
-        return [ord(c) - ord("a") for c in strkey]
+    @staticmethod
+    def form_array_key(strkey: str) -> list[int]:
+        letters = sorted(strkey)
+        res = list(map(lambda x: letters.index(x), strkey))
+        return res
