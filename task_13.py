@@ -1,99 +1,94 @@
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable
 from time import sleep, time
-from threading import Thread, Lock
-from heapdict import heapdict
-
-hd = heapdict()
-
-@dataclass
-class QueueEntry:
-    key: tuple
-    expired_at: float
+from typing import Callable, Any
+from threading import Lock, Thread
 
 
 @dataclass
 class MemoryEntry:
-    result: Any
-    queue_entry: QueueEntry
+    value: Any
+    expired_at: float
 
 
 class CacheManager:
-    def __init__(self, func: Callable, max_size: Any, seconds: Any) -> None:
-        self.__memory: dict[tuple, MemoryEntry] = {}
-        self.__queue: list[QueueEntry] = []
-        self.__func: Callable = func
-        self.__lock = Lock()
+    def __init__(
+        self, func: Callable, max_size: Any = None, seconds: Any = None
+    ) -> None:
+        self._memory: dict[tuple, MemoryEntry] = {}
+        self._func: Callable = func
+        self._max_size = self.sanitize_int_args(max_size)
+        self._seconds = self.sanitize_int_args(seconds)
+        self._lock = Lock()
 
-        # -1 means unlimited
-        if not isinstance(max_size, int) or max_size < 0:
-            self.__max_size = -1
-        else:
-            self.__max_size: int = max_size
+        if self._seconds == -1:
+            return
+        Thread(target=self.delete_expired, daemon=True).start()
 
-        if not isinstance(seconds, int) or seconds < 0:
-            self.__seconds = -1
-        else:
-            self.__seconds: float = seconds
-        Thread(target=self.delete_expired_thread, daemon=True).start()
-
-
-    def try_add(self, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
-        # Compute key tuple
+    def find_or_call(self, args: tuple, kwargs: dict[str, Any]) -> Any:
         key = self.args_to_tuple(args, kwargs)
 
-        with self.__lock:
-            # Get record
-            record = self.__memory.get(key)
-
-            # Return result if all is good
+        # If record is in memory, update time and return
+        with self._lock:
+            record = self._memory.get(key)
             if record is not None:
-                record.queue_entry.expired_at = time() + self.__seconds
-                return record.result
+                record.expired_at = time() + self._seconds
+                return record.value
 
-        # Compute new res
-        res = self.__func(*args, **kwargs)
+        # Else call a func and make a memeory entry
+        res = self._func(*args, **kwargs)
 
+        with self._lock:
+            self.delete_oldest_if_needed()
+            self._memory[key] = MemoryEntry(res, time() + self._seconds)
 
-        # Store res
-        with self.__lock:
-            # Free some space if overfull
-            if len(self.__queue) >= self.__max_size:
-                self.delete_overfull()
-            q = QueueEntry(key, time() + self.__seconds)
-            self.__queue.append(q)
-            self.__memory[key] = MemoryEntry(res,q)
+        return res
 
-        return record
+    def delete_oldest_if_needed(self) -> None:
+        if self._max_size == -1 or len(self._memory) <= self._max_size - 1:
+            return
 
-    def delete_overfull(self):
-        key = self.__queue.pop(0).key
-        print(f"Deleting entry: {key} due to overfull storage.")
-        del self.__memory[key]
+        oldest_key = None
+        oldest_time: float = 0
+        for k, v in self._memory.items():
+            if oldest_key == None:
+                oldest_key = k
+                oldest_time = v.expired_at
+                continue
 
-    def delete_expired_thread(self):
+            if oldest_time > v.expired_at:
+                oldest_key = k
+                oldest_time = v.expired_at
+
+        if oldest_key == None:
+            return
+
+        del self._memory[oldest_key]
+
+    def delete_expired(self) -> None:
         while True:
-            sleep(5)
-            with self.__lock:
-                total = len(self.__queue)
-                i = 0
-                while i < total:
-                    if len(self.__queue) == 0:
-                        break
-                    entry = self.__queue[i]
-                    if entry.expired_at < time():
-                        print(f"Deleting entry: {entry.key} due to storage time limit.")
-                        del self.__memory[entry.key]
-                        del self.__queue[i]
-                    else:
-                        i += 1
+            print("Searching for expired entries")
+            sleep(self._seconds / 2)
+            to_delete = []
+            with self._lock:
+                for k, v in self._memory.items():
+                    if v.expired_at < time():
+                        to_delete.append(k)
 
+                for k in to_delete:
+                    del self._memory[k]
+                    print(f"Deleted {k} due to lifetime limit")
 
     @staticmethod
-    def args_to_tuple(
-        args: tuple[Any, ...], kwargs: dict[str, Any]
-    ) -> tuple[tuple, tuple]:
+    def sanitize_int_args(arg: Any) -> int:
+        if not isinstance(arg, int):
+            return -1
+        if arg <= 0:
+            return -1
+        return arg
+
+    @staticmethod
+    def args_to_tuple(args: tuple, kwargs: dict) -> tuple:
         return (args, tuple(sorted(kwargs.items())))
 
 
@@ -103,25 +98,9 @@ def cached(max_size=None, seconds=None):
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            res = cache.try_add(args, kwargs)
+            res = cache.find_or_call(args, kwargs)
             return res
 
         return wrapper
 
     return inner
-
-
-@cached(2, 10)
-def slow_func(arg1, arg2):
-    sleep(3)
-    return 0
-
-
-print("Uncached:")
-print(slow_func(1, 2))
-print("Uncached2:")
-print(slow_func(1, 3))
-print("Cached:")
-print(slow_func(1, 2))
-print("Uncached2:")
-print(slow_func(1, 4))
