@@ -17,7 +17,7 @@ class BlockTranspositionCipher:
             return res
 
         res = self.decrypt_block()
-        if self.i == len(self.blocks)-1:
+        if self.i == len(self.blocks) - 1:
             res = res.rstrip(" ")
         return res
 
@@ -33,26 +33,24 @@ class BlockTranspositionCipher:
         self.key = self.form_array_key(key)
 
     def encrypt_block(self) -> str:
-        res = [" "]*len(self.key)
-        block = self.blocks[self.i]
-        for i, letter in enumerate(block):
-            res[self.key[i]] = letter
-
-        return "".join(res)
-
-    def decrypt_block(self) -> str:
-        res = [" "]*len(self.key)
+        res = [" "] * len(self.key)
         block = self.blocks[self.i]
         for i, letter in enumerate(block):
             res[self.key.index(i)] = letter
 
         return "".join(res)
 
+    def decrypt_block(self) -> str:
+        res = [" "] * len(self.key)
+        block = self.blocks[self.i]
+        for i, letter in enumerate(block):
+            res[self.key[i]] = letter
 
+        return "".join(res)
 
     @staticmethod
     def split_text(text: str, n: int) -> list[list[str]]:
-        res = []
+        res: list[list[str]] = []
         if len(text) % n != 0:
             text = text + " " * (n - len(text) % n)
         for i, v in enumerate(text):
